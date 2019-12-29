@@ -1,18 +1,20 @@
 #include <Windows.h>
 #include <gl/GL.h>
 #include <gl/GLU.h>
-
+#include <iostream>
 #pragma comment (lib, "OpenGL32.lib")
 #pragma comment (lib, "GLU32.lib")
 
 #define WINDOW_TITLE "OpenGL Window"
 int displaykey = 1;
+char s[256];
 float r = 0.0;
 int on = 1;
-float amb[] = { 1.0,1.0,1.0 };
+float amb[] = { 0.0,1.0,0.0 };
 float pos[] = { 0.0,1.0,0.0 };
-float dif[] = { 1.0,1.0,1.0 };
-float x=0, y=0.8, z=0.0;
+float dif[] = { 1.0,0.0,0.0 };
+float x=0.3, y=0.8, z=0.0;
+float x1 = 0, ys2 = 0.8, z1 = 0.0;
 float posD[] = { 0.0,0.0,0.0 };
 float ambM[] = { 1.0,1.0,1.0 };
 LRESULT WINAPI WindowProcedure(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
@@ -31,6 +33,10 @@ LRESULT WINAPI WindowProcedure(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam
 		if (wParam == 'D') x += 0.1;
 		if (wParam == 'Q') z -= 0.1;
 		if (wParam == 'E') z += 0.1;
+		if (wParam == 'U') ys2 += 0.1;
+		if (wParam == 'J') ys2 -= 0.1;
+		if (wParam == 'H') x1 -= 0.1;
+		if (wParam == 'K') x1 += 0.1;
 		if (wParam == 'O') displaykey=1;
 		if (wParam == 'P') displaykey=2;
 		if (wParam == ' ')
@@ -42,6 +48,9 @@ LRESULT WINAPI WindowProcedure(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam
 		}
 		if (wParam == VK_UP) r += 1;
 		if (wParam == VK_DOWN) r -= 1;
+		sprintf_s(s, "y=%f\n",y);
+		OutputDebugString(s);
+
 		break;
 
 	default:
@@ -83,30 +92,6 @@ bool initPixelFormat(HDC hdc)
 	}
 }
 //--------------------------------------------------------------------
-void shadow()
-{
-	GLfloat matrix[16] =
-	{
-		y,-x,0,0,
-		0,0,0,0,
-		0,-z,y,0,
-		0,-1,0,y
-	};
-
-	glDisable(GL_LIGHTING);
-	
-	
-	glPushMatrix();
-	glTranslatef(0.0, 1.25, 0.0);
-	glMultMatrixf(matrix);
-	glColor3f(0.0f, 0.0f, 0.0f);
-	glTranslatef(0.0,0.5, 0.0);
-	GLUquadricObj* sphere = NULL;
-	sphere = gluNewQuadric();
-	gluSphere(sphere, 0.2, 30, 30);
-	gluDeleteQuadric(sphere);
-	glPopMatrix();
-}
 void drawPyradmid(float s)
 {
 	glBegin(GL_POLYGON);
@@ -144,20 +129,118 @@ void drawPyradmid(float s)
 
 
 }
+void shadow()
+{
+	float ym = y;
+	if (ym > 0.8)
+		ym = 0.8;
+
+	GLfloat matrix[16] =
+	{
+		ym,-x,0,0,
+		0,0,0,0,
+		0,-z,ym,0,
+		0,-1,0,ym
+	};
+
+	glDisable(GL_LIGHTING);
+	glDisable(GL_DEPTH_TEST);
+	if(ym>0.7)
+	{
+	glPushMatrix();
+
+	glTranslatef(0.0, 1.25, 0.0);
+	glMultMatrixf(matrix);
+	glColor3f(0.0f, 0.0f, 0.0f);
+	glTranslatef(0.0,0.5, 0.0);
+	GLUquadricObj* sphere = NULL;
+	sphere = gluNewQuadric();
+	gluSphere(sphere, 0.2, 30, 30);
+	gluDeleteQuadric(sphere);
+	glPopMatrix(); 
+	glPushMatrix();
+	glTranslatef(0.0, 1.25, 0.0);
+	glMultMatrixf(matrix);
+	glTranslatef(0.2, 0.3, 0);
+	drawPyradmid(0.2);
+	glPopMatrix();
+	}
+	glEnable(GL_DEPTH_TEST);
+	
+}
+
+void shadow2()
+{
+	float ym = ys2;
+	if (ym > 0.8)
+		ym = 0.8;
+	GLfloat matrix[16] =
+	{
+		ym,-x1,0,0,
+		0,0,0,0,
+		0,-z1,ym,0,
+		0,-1,0,ym
+	};
+
+	glDisable(GL_LIGHTING);
+	glDisable(GL_DEPTH_TEST);
+	if (ym > 0.7)
+	{
+		glPushMatrix();
+
+		glTranslatef(0.0, 1.25, 0.0);
+		glMultMatrixf(matrix);
+		glColor3f(0.0f, 0.0f, 0.0f);
+		glTranslatef(0.0, 0.5, 0.0);
+		GLUquadricObj* sphere = NULL;
+		sphere = gluNewQuadric();
+		gluSphere(sphere, 0.2, 30, 30);
+		gluDeleteQuadric(sphere);
+		glPopMatrix();
+
+		glPushMatrix();
+		glTranslatef(0.0, 1.25, 0.0);
+		glMultMatrixf(matrix);
+		glTranslatef(0.2, 0.3, 0);
+		drawPyradmid(0.2);
+		glPopMatrix();
+	}
+	glEnable(GL_DEPTH_TEST);
+}
+
 void display()
 {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glEnable(GL_DEPTH_TEST);
 	glClearColor(0, 0, 1, 1);
+	glPushMatrix();
+	glColor3f(1, 1, 0);
+	glTranslatef(x, y, z);
+	GLUquadricObj* sphere = NULL;
+	sphere = gluNewQuadric();
+	gluSphere(sphere, 0.05, 30, 30);
+	gluDeleteQuadric(sphere);
+	glPopMatrix();
+
+	glPushMatrix();
+	glColor3f(0, 1, 0);
+	glTranslatef(x1, ys2, z1);
+	//GLUquadricObj* sphere = NULL;
+	sphere = gluNewQuadric();
+	gluSphere(sphere, 0.05, 30, 30);
+	gluDeleteQuadric(sphere);
+	glPopMatrix();
+
+	
 	if (on == 1)
 	{
 		glEnable(GL_LIGHTING);
 		posD[0] = x;
 		posD[1] = y;
 		posD[2] = z;
-		//glLightfv(GL_LIGHT0, GL_AMBIENT, amb);
-		//glLightfv(GL_LIGHT0, GL_POSITION, pos);
-		//glEnable(GL_LIGHT0);
+		glLightfv(GL_LIGHT0, GL_AMBIENT, amb);
+		glLightfv(GL_LIGHT0, GL_POSITION, pos);
+		glEnable(GL_LIGHT0);
 
 
 		
@@ -174,17 +257,8 @@ void display()
 	if (displaykey == 1)
 	{
 		glPushMatrix();
-		glColor3f(1, 1, 0);
-		glTranslatef(x, y, z);
-		GLUquadricObj* sphere = NULL;
-		sphere = gluNewQuadric();
-		gluSphere(sphere, 0.05, 30, 30);
-		gluDeleteQuadric(sphere);
-		glPopMatrix();
-	
-		glPushMatrix();
 		glTranslatef(0.0, 0.5, 0.0);
-		
+
 		sphere = gluNewQuadric();
 		gluSphere(sphere, 0.2, 30, 30);
 		gluDeleteQuadric(sphere);
@@ -246,11 +320,18 @@ void display()
 		glVertex3f(2, 0, -1);
 
 		glEnd();
+		glPushMatrix();
+		glTranslatef(0.2,0.3,0);
+		drawPyradmid(0.2);
+		glPopMatrix();
 	}
 	else if (displaykey == 2)
 		drawPyradmid(1);
-	if(on==1)
+	if (on == 1)
+	{		
 		shadow();
+		shadow2();
+	}
 
 
 }
